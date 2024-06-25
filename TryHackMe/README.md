@@ -162,3 +162,18 @@ and got the admin hash and finally got shell access by passing the admin hash.
 - Found a way to capture hash from the `redis-cli` interface using the `lua` script command share access method.
 - Now cracked hash and got access to SMB share where we got write access. So, we found a powershell script that was getting executed by a scheduled task and replaced the content with a reverse shell.
 - Finally for privesc used the `meterpreter` utility `getsystem` because roguepotato, juicypotato, etc. were all failing.
+
+# THM-Reset-AD
+- Got some credentials on the SMB share but seemed useless. Performed URL File attack and grabbed hash for the `automate` user and got the first flag.
+- Now used `impacket-GetNPUsers` to locate users which have Kerberos Pre-Authentication disabled and found 3 out of which only one of the tickets cracked.
+- So, now we ran `bloodhound-python` utility to remotely gather `json` files for BloodHound.
+- Now in BloodHound GUI we found, the user whose ticket we grabbed and cracked, had a link towards Administrator through a series of `Generic All`, `ForceChangePassword`, `Owns` relations to the three consecutive users respectively.
+- Now this third user had `AllowedToDelegate` relation on `haystack.thm.corp` computer which contained the Admin user.
+So, we leveraged the delegations by getting the SPN from the `Node Info` tab on BloodHound for this third user and finally used,
+`impacket-getST -spn cifs/HayStack.thm.corp -dc-ip 10.10.33.128 -impersonate 'Administrator' thm.corp/darla_winters:Pass@123`
+And gathered admins ticket.
+- Now finally we can export the required variable with,
+`export KRB5CCNAME=Administrator@cifs_HayStack.thm.corp@THM.CORP.ccache`
+and got admin shell with,
+`impacket-wmiexec Administrator@haystack.thm.corp -no-pass -k`
+and got the final flag.
