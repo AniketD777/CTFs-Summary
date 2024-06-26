@@ -191,9 +191,10 @@ and got the admin users NTLM hash and performed pass the hash with `evil-winrm` 
 - Windows
 - Found the port 111 and 2049 open and was specified the `NFS` service. So got the share mounted and found a file with interesting stuff.
 - Now mostly it was CTFish and had to use the `impacket` tools recursively to pivot to other users by dumping tickets, hashes, and eventually cracking them or via pass the hash attack. Also came across to change `SMB` credentials using the `impacket-smbpass` utility as we got the error `STATUS_PASSWORD_MUST_CHANGE` on `crackmapexec` while trying password spraying i.e. same password on a users list.
-- Also came across dumping securely saved network credentials found in the `.xml` files.
-- Also one of the users was in the `backup operators` group which allowed us to dump `ntds.dit` and `system.hive` through which we dumped the NTLM hashes of users with `impacket-secretsdump` utility.
+- Also came across dumping securely saved network credentials found in the `.xml` files,
 ```
 $importedCredential = Import-Clixml -Path "_File_.xml"
 $importedCredential.GetNetworkCredential().Password => This shows the decrypted password field.
 ```
+- Also one of the users was in the `backup operators` group which allowed us to dump `ntds.dit` and `system.hive` through which we dumped the NTLM hashes of users with `impacket-secretsdump` utility.
+
