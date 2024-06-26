@@ -177,3 +177,23 @@ And gathered admins ticket.
 and got admin shell with,
 `impacket-wmiexec Administrator@haystack.thm.corp -no-pass -k`
 and got the final flag.
+
+# THM-AttacktiveDirectory-AD
+- Windows
+- We were given a custom `user.txt` which allowed to enumerate users with `kerbrute` and we found two eye catching users i.e. `backup` and `svc-admin`. 
+- Now used the `impacket-GetNPUsers` on both these users and we got the ticket for `svc-admin` and got it cracked.
+- Now logged in to SMB with these creds and found a share which had credentials for `backup` user.
+- So, now this user had backup privileges and hence, we can try to dump hashes from NTDS.dit file with `impacket-secretsdump` remotely with this `backup` user's creds,
+`impacket-secretsdump spookysec.local/backup@10.10.191.222`
+and got the admin users NTLM hash and performed pass the hash with `evil-winrm` to get all the three flags.
+
+# THM-RazorBlack-AD
+- Windows
+- Found the port 111 and 2049 open and was specified the `NFS` service. So got the share mounted and found a file with interesting stuff.
+- Now mostly it was CTFish and had to use the `impacket` tools recursively to pivot to other users by dumping tickets, hashes, and eventually cracking them or via pass the hash attack. Also came across to change `SMB` credentials using the `impacket-smbpass` utility as we got the error `STATUS_PASSWORD_MUST_CHANGE` on `crackmapexec` while trying password spraying i.e. same password on a users list.
+- Also came across dumping securely saved network credentials found in the `.xml` files.
+- Also one of the users was in the `backup operators` group which allowed us to dump `ntds.dit` and `system.hive` through which we dumped the NTLM hashes of users with `impacket-secretsdump` utility.
+```
+$importedCredential = Import-Clixml -Path "_File_.xml"
+$importedCredential.GetNetworkCredential().Password => This shows the decrypted password field.
+```
