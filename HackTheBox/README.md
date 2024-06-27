@@ -231,3 +231,21 @@ nmap> !whoami    => On Prompt check for root
 nmap> !sh  				=> Get the root shell
 ```
 
+# HTB-Crafty
+- Windows
+- We found an uncommon port open and on service scan found it is a minecraft server with version `1.16.5`. Now researching on this version found it is vulnerable to Log4j RCE exploit. So, we just need to host a malicious java class file that spawns a reverse shell with the `ldap` server. So, we got a script to host. And for the client we need to install minecraft. So, `TLauncher` did a great job. So, tried to do all of that manually but the `Exploit.class` file we compiled was not throwing the reverse shell.
+- After a while came across a fully automated working PoC. So, we just need to turn on the listener, download the required JDK for the PoC and finally run the PoC and we grabbed the shell and got the first flag.
+Link: https://github.com/kozmer/log4j-shell-poc
+- Now running `winpeas` couldn't locate anything interesting. Came across a writeup and got to know that these hosted minecraft server `jar` files contains password of the admin user to access the system resources. And hence, downloaded both `server.jar` and `playercounter-1.0-SNAPSHOT.jar` files and decompiled them using `jd-gui` utility and located a password. And hence, finally used `RunasCs.exe` to run commands as other users i.e. admin.
+
+# HTB-Jab
+- Windows
+- So, while portscan found a service named `xmpp` on one of the ports. Started researching on it and found it a messaging service such that the members can talk in realtime. Now researching on how to connect to this service found a `pidgin` GUI utility and got it downloaded.
+- Now got a test account registered. So, enumerating this app found a room discovery plugin and got it installed and found a room named test2 where we located some chats but was useless. Also from the user manage section found another utility to list users. So, used the wildcard character to locate all the user names. And now ran pidgin again in log mode and went through the steps to get the users.
+`pidgin -d > out.log`
+Finally from this log file got the users and sorted it into a user list.
+- Now performed ASReproasing with `impacket-GetNPUsers` using this user list. Found 3 tickets and one of them cracked. And with these gathered creds logged into pidgin and located a `pentest` chat room and got a ticket cracked. So, got another credential for user `svc_openfire`. Couldn't login anyway so as msrpc port was open, we used DCOM remote code execution to get the shell and got the first flag.
+- Now we found a openfire privilege escalation vulnerability to access admin panel. So, we found a PoC that tries to add a new user but was of no use to us as we already had `svc_openfire` user passwd. 
+Link: https://github.com/miko550/CVE-2023-32315
+- So, we confirmed that both `9090` and `9091` ports were open on localhost. Now time was to port forward these two ports onto our attack machine. So, we used `chisel`.
+- And hence, we followed rest of the steps on the PoC readme page after the login to upload a custom RCE plugin. And finally got admin shell command access and got the final flag.
