@@ -250,3 +250,31 @@ Finally from this log file got the users and sorted it into a user list.
 Link: https://github.com/miko550/CVE-2023-32315
 - So, we confirmed that both `9090` and `9091` ports were open on localhost. Now time was to port forward these two ports onto our attack machine. So, we used `chisel`.
 - And hence, we followed rest of the steps on the PoC readme page after the login to upload a custom RCE plugin. And finally got admin shell command access and got the final flag.
+
+# HTB-SolarLab
+- Windows
+- My writeup available on medium.
+- Found a sensitive document file in the SMB share having some credentials. Now located a login page on port `6791` which was vulnerable to username disclosure and tried the possible combinations by guessing the username of one of the found users and got access.
+- Now located a PDF conversion functionality and through response found the `ReportLab` utility being used and found a public exploit `CVE-2023-33733` through which we gained manually gained RCE and got the first shell and the flag.
+Link: https://github.com/miko550/CVE-2023-32315
+- Now located a user `openfire` and leveraged `CVE-2023-32315` as both ports `9090` and `9091` were open and hence, tunneled them and got access and leverage the exploit and got system command execution through which got reverse shell as `openfire` user.
+- Now in the config files `openfire.log` and `openfire.script` in one of the openfire directory located the encrypted password and the associated encryption key and located a java tool to decrypt it.
+Link: https://github.com/c0rdis/openfire_decrypt
+And finally got the admin password and got shell access with `impacket-psexec` utility and got the final flag.
+ 
+# HTB-Office
+- Windows
+- Found the Joomla version `4.2.7` and found a public exploit `CVE-2023-23752` through which we located a password.
+Link: https://github.com/Acceis/exploit-CVE-2023-23752
+- Now used `kerbrute` to look for users and tried the gained password on all of the found users and located one valid match. Now got access to the SMB share using this and located a PCAP file where we located Kerberos packets and found a way to gather the tickets captured and got that cracked which was for user `tstark`. So, this gave a clear link to the Joomla admin login page which we found in `robots.txt`. So, got the initial as the `web_account` user. 
+- Now we already had credential for this `tstark` user and leveraged the `run post/windows/manage/run_as_psh USER=tstark PASS=_Passwd_ EXE=cmd.exe` utility from the meterpreter shell using the `rev.exe` payload as the `RunasCs.exe` and other utilties were all failing and got the first flag.
+- Now we used the `BloodHound-Python` utility using this `tstark` creds. And we found a relation of the `HHogan` user with `Administrator` user. So, was time to get this `HHogan` user compromised.
+- Now enumerating for a while we located a web application named `internal` in `C:\xampp\htdocs\`. So, couldn't locate any credential in any of the php files. Now was time to locate at what port it was running. So, using the `netstat` on the meterpreter shell, found port 8083 as `httpd.exe`. So, as it was not visible externally in portscans, hence, had to do portforwarding with `chisel` to access locally it as `http://127.0.0.1:8083`.
+Now enumerating this webapp, found a upload functionality and going through the source code found it supported document extensions like `.docm,.docx,.odt`. So, we already previously came across such escalation before, where we were able to locate an exploit on the `libre` office. And going through the readme files in `libre` documentation found version `5.2` and located a public exploit `CVE-2023-2255`.
+Link: https://github.com/elweth-sec/CVE-2023-2255
+which gave shell access as another user on uploading the malicious doc file as the web app was owned by this another user. `icacls _file.php_`
+Also came across this module to locate the application versions from a writeup `run post/windows/gather/enum_applications` on the meterpreter shell.
+- Now during manual enumeration ran `cmdkey /list` and found a stored credential for the `HHogan` user who had a relation with the admin user. So, we used the DPAPI - Extracting Passwords method to dump the credentials. Refer the cred dumping notes and the link.
+Link: https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation/dpapi-extracting-passwords
+Link: https://tools.thehacker.recipes/mimikatz/modules/dpapi/masterkey
+- And finally got the password and got access with `evil-winrm`. Now we abused the `GPO Managers` group membership we found earlier in `BloodHound` and abused the `GenericWrite` privileges with `SharpGPOAbuse.exe` to add our user in the local admins group as we didn't had RDP access. Hence, finally logging out and logging in again got the policies updated and gave us access to admin files to get the final flag.
