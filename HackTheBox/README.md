@@ -48,11 +48,13 @@ Link: https://github.com/xkaneiki/CVE-2023-0386/
 - Hash Cracking using a hint from the `mail`.
 
 # HTB-Headless
+- Linux
 - Stored XSS in User Agent field and leveraged it for admin cookie hijacking.
 - Command Injection on the dashboard in the admin session.
 - sudo permission on `syscheck` script that was misconfigured to look for a `initdb.sh` file in the current working directory. So, made the same named reverseshell script, gave execute permission and again ran the `syscheck` script with sudo permissions.
 
 # HTB-WifineticTwo
+- Linux
 - Got default credentials `openplc:openplc` and used the below script. This below script had only one change compared to the original OpenPLC exploit PoC where we need to specify one of the `.st` files that already exists on the server like `blank_program.st`.
 Refer: https://github.com/Hunt3r0x/CVE-2021-31630-HTB/blob/main/exploit.py
 - Now did some wifi pentesting and found one wifi network with WPS enabled. So, bruteforced WPS code(PixieDustAttack), got the credentials and connected.
